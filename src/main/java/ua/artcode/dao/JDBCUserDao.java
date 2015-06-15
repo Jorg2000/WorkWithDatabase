@@ -10,26 +10,25 @@ import java.util.List;
  * Created by serhii on 30.05.15.
  */
 public class JDBCUserDao implements UserDao {
-    private Connection conn;
+    //private Connection conn;
     private ConnectionFactory connectionFactory;
 
     public JDBCUserDao() {
-        ConnectionFactory connectionFactory = new ConnectionFactory();
+         connectionFactory = new ConnectionFactory();
         }
 
     public User create(User user) {
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        Connection conn;
 
-        conn = connectionFactory.createConnection("127.0.0.1","3306","notes","root","root");
+       Connection conn = connectionFactory.createConnection();
+
         try {
-            Statement statement = conn.createStatement();
-
-            boolean resultSet = statement.execute(
-                    "INSERT INTO users (fullname, email, pass)" +
-                    "VALUES ('" + user.getFullName() + "','" + user.getEmail() + "','" + user.getPass() +"');");
-
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO users (fullname, email, pass) VALUES (?,?,?)");
+            ps.setString(1, user.getFullName());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getPass());
+            ps.execute();
             conn.close();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -38,23 +37,18 @@ public class JDBCUserDao implements UserDao {
     }
 
     public User findByEmail(String email) {
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        Connection conn;
+
+        Converter convert = new Converter();
+
         User user = null;
-        conn = connectionFactory.createConnection("127.0.0.1","3306","notes","root","root");
+        Connection conn = connectionFactory.createConnection();
 
         try {
-            Statement statement = conn.createStatement();
+            PreparedStatement ps = conn.prepareStatement("SELECT id, fullname, email, pass FROM users WHERE email = ?");
+            ps.setString(1, email);
 
-            ResultSet resultSet = statement.executeQuery("SELECT id, fullname, email FROM users WHERE " +
-                    " email = '" + email + "';");
-
-            while (resultSet.next()){ // row - object => relation -> oop model
-                long id = resultSet.getLong("id");
-                String fullname = resultSet.getString("fullname");
-                String pass = resultSet.getString("pass");
-                user = new User(id, fullname, email, pass);
-            }
+            ResultSet resultSet = ps.executeQuery();
+            user = convert.resultToUser(resultSet);
             conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -65,22 +59,16 @@ public class JDBCUserDao implements UserDao {
 
     public User findById(long id) {
         ConnectionFactory connectionFactory = new ConnectionFactory();
-        Connection conn;
+        Converter convert = new Converter();
         User user = null;
-        conn = connectionFactory.createConnection("127.0.0.1","3306","notes","root","root");
+        Connection conn = connectionFactory.createConnection();
         try {
-            Statement statement = conn.createStatement();
 
-            ResultSet resultSet = statement.executeQuery("SELECT id, fullname, email, pass FROM users WHERE " +
-                    " id = '" + id + "';");
-
-            while (resultSet.next()){ // row - object => relation -> oop model
-
-                String fullname = resultSet.getString("fullname");
-                String pass = resultSet.getString("pass");
-                String email = resultSet.getString("email");
-                user = new User(id, fullname, email, pass);
-            }
+            PreparedStatement ps = conn.prepareStatement("SELECT id, fullname, email, pass FROM users WHERE " +
+                    " id = ?");
+            ps.setLong(1, id);
+            ResultSet resultSet = ps.executeQuery();
+            user = convert.resultToUser(resultSet);
             conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -91,17 +79,16 @@ public class JDBCUserDao implements UserDao {
 
     public void delete(long id) {
         ConnectionFactory connectionFactory = new ConnectionFactory();
-        Connection conn;
-        conn = connectionFactory.createConnection("127.0.0.1","3306","notes","root","root");
+
+        Connection conn = connectionFactory.createConnection();
         try {
-            Statement statement = conn.createStatement();
-            System.out.println("DELETE FROM users WHERE id ='"+ id + "';");
-            statement.execute("DELETE FROM users WHERE id ='"+ id + "';");
+            PreparedStatement ps = conn.prepareStatement("DELETE FROM users WHERE id = ?") ;
+            ps.setLong(1,id);
+            ps.execute();
             conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
     }
 
     public void update(User user) {
@@ -111,23 +98,19 @@ public class JDBCUserDao implements UserDao {
     public List<User> findAll() {
         List<User> users = new LinkedList<User>();
         ConnectionFactory connectionFactory = new ConnectionFactory();
+        Converter convert = new Converter();
         Connection conn;
-        conn = connectionFactory.createConnection("127.0.0.1","3306","notes","root","root");
+        conn = connectionFactory.createConnection();
 
         try {
             Statement statement = conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT id, fullname, email FROM users;");
-
-            while (resultSet.next()){ // row - object => relation -> oop model
-                long id = resultSet.getLong("id");
-                String fullname = resultSet.getString("fullname");
-                String email = resultSet.getString("email");
-                users.add(new User(id,fullname,email, null));
-            }
+            ResultSet resultSet = statement.executeQuery("SELECT id, fullname, email, pass FROM users;");
+            users = convert.resultToUsersList(resultSet);
             conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return users;
     }
+
 }

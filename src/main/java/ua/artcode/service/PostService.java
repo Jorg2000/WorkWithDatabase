@@ -1,5 +1,6 @@
 package ua.artcode.service;
 
+import ua.artcode.model.User;
 import ua.artcode.model.UserPost;
 
 import java.util.List;
@@ -9,10 +10,9 @@ import java.util.List;
  */
 public interface PostService {
 
-    UserPost createPost(long userId, String title, String text);
+    UserPost createPost(User user, UserPost userPost);
     List<UserPost> userPosts(long userId);
     UserPost getById(long postId);
-    boolean delete(long userId, long postId);
-
+    boolean delete(long userId, long postId); //TODO implement this method
 
 }

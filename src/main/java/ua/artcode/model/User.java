@@ -1,16 +1,27 @@
 package ua.artcode.model;
 
+
+
+
+import org.hibernate.annotations.GenericGenerator;
+
+import javax.persistence.*;
+
 /**
  * Created by serhii on 30.05.15.
  */
+@Entity
+@Table(name = "users")
 public class User {
 
+    @Id
+    @GeneratedValue(generator="increment")
+    @GenericGenerator(name="increment", strategy = "increment")
+    @Column(unique = true)
     private long id;
     private String fullName;
     private String email;
     private String pass;
-
-
 
     public User() {
     }
