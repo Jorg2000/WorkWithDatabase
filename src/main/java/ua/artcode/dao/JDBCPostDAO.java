@@ -23,26 +23,25 @@ public class JDBCPostDAO implements PostDao {
         connectionFactory = new ConnectionFactory();
     }
 
-    public UserPost createPost(User u, UserPost p) {
-        User user = u;
-        UserPost userPost = p;
-        java.sql.Date creationTime = new java.sql.Date(userPost.getCreationDate().getTime());
+    public UserPost createPost(User user, UserPost post) {
+
+        java.sql.Date creationTime = new java.sql.Date(post.getCreationDate().getTime());
 
         Connection conn = connectionFactory.createConnection();
         try {
             PreparedStatement ps = conn.prepareStatement("INSERT INTO posts " +
                     "(post_text, post_data_time, user_id, post_title)  " +
                     "VALUES (?,?,?,?) ");
-            ps.setString(1,userPost.getBody());
+            ps.setString(1,post.getBody());
             ps.setDate(2, creationTime);
-            ps.setLong(3, userPost.getOwner().getId());
-            ps.setString(4, userPost.getTitle());
+            ps.setLong(3, post.getOwner().getId());
+            ps.setString(4, post.getTitle());
             ps.execute();
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return userPost;
+        return post;
     }
 
     public UserPost getById(long id) {
